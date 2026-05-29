@@ -65,7 +65,22 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       console.error("OpenRouter API Error:", data);
-      throw new Error(data.error?.message || "Failed to generate image via OpenRouter.");
+      
+      let errorMessage = data.error?.message || "Failed to generate image via OpenRouter.";
+      
+      // Extract specific moderation reasons if provided by the model provider
+      if (data.error?.metadata?.raw) {
+        try {
+          const rawData = JSON.parse(data.error.metadata.raw);
+          if (rawData.details && rawData.details["Moderation Reasons"]) {
+            errorMessage = "Provider rejected prompt: " + rawData.details["Moderation Reasons"].join(", ");
+          }
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+
+      throw new Error(errorMessage);
     }
 
     const message = data.choices?.[0]?.message;

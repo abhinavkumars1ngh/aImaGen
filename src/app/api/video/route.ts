@@ -44,7 +44,16 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       console.error("OpenRouter Video API Error:", data);
-      throw new Error(data.error?.message || "Failed to start video generation.");
+      let errorMessage = data.error?.message || "Failed to start video generation.";
+      if (data.error?.metadata?.raw) {
+        try {
+          const rawData = JSON.parse(data.error.metadata.raw);
+          if (rawData.details && rawData.details["Moderation Reasons"]) {
+            errorMessage = "Provider rejected prompt: " + rawData.details["Moderation Reasons"].join(", ");
+          }
+        } catch (e) {}
+      }
+      throw new Error(errorMessage);
     }
 
     // data should contain { id: "job_id", polling_url: "..." }
