@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StudioAI - AI Lingerie Generation",
+  title: "aImaGen - Imagine, Generate",
   description: "Generate photorealistic models for your lingerie and nightwear collection",
 };
 
