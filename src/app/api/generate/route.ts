@@ -43,10 +43,7 @@ export async function POST(request: Request) {
         text: fullPrompt
       });
     } else {
-      messages[0].content.push({
-        type: "text",
-        text: fullPrompt
-      });
+      messages[0].content = fullPrompt;
     }
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
