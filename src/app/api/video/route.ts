@@ -5,10 +5,9 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const imageFile = formData.get('image') as File | null;
     const prompt = formData.get('prompt') as string;
-    
-    // For video generation, OpenRouter uses a different payload structure.
+
     const payload: any = {
-      model: "x-ai/grok-imagine-video", // Cheapest video model
+      model: "x-ai/grok-imagine-video",
       prompt: prompt || "A video based on the provided image.",
     };
 
@@ -18,15 +17,11 @@ export async function POST(request: Request) {
       const base64 = buffer.toString('base64');
       const dataUrl = `data:${imageFile.type};base64,${base64}`;
 
-      payload.frame_images = [
-        {
-          type: "image_url",
-          image_url: {
-            url: dataUrl
-          },
-          frame_type: "first_frame"
-        }
-      ];
+      payload.frame_images = [{
+        type: "image_url",
+        image_url: { url: dataUrl },
+        frame_type: "first_frame"
+      }];
     }
 
     const response = await fetch("https://openrouter.ai/api/v1/videos", {
@@ -35,7 +30,7 @@ export async function POST(request: Request) {
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "StudioAI",
+        "X-Title": "aImaGen",
       },
       body: JSON.stringify(payload)
     });
@@ -56,7 +51,6 @@ export async function POST(request: Request) {
       throw new Error(errorMessage);
     }
 
-    // data should contain { id: "job_id", polling_url: "..." }
     return NextResponse.json(data);
 
   } catch (error: any) {

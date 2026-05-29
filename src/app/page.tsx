@@ -29,9 +29,7 @@ export default function Home() {
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
+  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -64,34 +62,20 @@ export default function Home() {
 
     try {
       if (mode === "img2vid") {
-        // Video Generation Flow (Async Polling)
-        const response = await fetch("/api/video", {
-          method: "POST",
-          body: formData,
-        });
-        
+        const response = await fetch("/api/video", { method: "POST", body: formData });
         const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to start video generation");
-        }
+        if (!response.ok) throw new Error(data.error || "Failed to start video generation");
 
         const jobId = data.id;
-        if (!jobId) {
-          throw new Error("No Job ID returned for video generation");
-        }
+        if (!jobId) throw new Error("No Job ID returned for video generation");
 
         setIsPolling(true);
 
-        // Poll until completion
-        while (true) {
+        while (true) { // poll every 5s until done
           await new Promise(resolve => setTimeout(resolve, 5000));
           const pollRes = await fetch(`/api/video/${jobId}`);
           const pollData = await pollRes.json();
-          
-          if (!pollRes.ok) {
-            throw new Error(pollData.error || "Failed to check video status");
-          }
+          if (!pollRes.ok) throw new Error(pollData.error || "Failed to check video status");
 
           if (pollData.status === "completed") {
             setResultType("video");
@@ -101,21 +85,12 @@ export default function Home() {
           } else if (pollData.status === "failed" || pollData.status === "error") {
             throw new Error(pollData.error || "Video generation failed");
           }
-          // if 'pending', continue loop
         }
 
       } else {
-        // Image Generation Flow (Sync)
-        const response = await fetch("/api/generate", {
-          method: "POST",
-          body: formData,
-        });
-
+        const response = await fetch("/api/generate", { method: "POST", body: formData });
         const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to generate image");
-        }
+        if (!response.ok) throw new Error(data.error || "Failed to generate image");
 
         if (data.result?.images?.[0]?.url) {
           setResultType("image");
@@ -147,11 +122,9 @@ export default function Home() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Controls */}
           <div className="lg:col-span-5 space-y-6">
             <div className="glass-panel p-6 space-y-6">
 
-              {/* Mode Toggle */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-neutral-300">Generation Mode</label>
                 <div className="grid grid-cols-3 gap-2">
@@ -198,7 +171,6 @@ export default function Home() {
                 </p>
               </div>
               
-              {/* Upload Zone — for img2img and img2vid */}
               {(mode === "img2img" || mode === "img2vid") && (
                 <div 
                   className={`border-2 border-dashed border-neutral-700 rounded-2xl p-8 text-center cursor-pointer hover:bg-neutral-800/50 transition-colors ${imagePreview ? 'bg-neutral-800/30' : ''}`}
@@ -229,7 +201,6 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Prompts */}
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-neutral-300">
@@ -261,7 +232,6 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Error Message */}
               {errorMsg && (
                 <div className="bg-red-900/30 border border-red-800 rounded-xl px-4 py-3 text-sm text-red-300">
                   {errorMsg}
@@ -286,7 +256,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Column: Result View */}
           <div className="lg:col-span-7">
             <div className="glass-panel h-full min-h-[600px] p-6 flex flex-col">
               <div className="flex items-center justify-between mb-4">
@@ -307,19 +276,9 @@ export default function Home() {
               <div className="flex-1 bg-neutral-950/50 rounded-xl border border-neutral-800 flex items-center justify-center overflow-hidden relative">
                 {resultMedia ? (
                   resultType === "video" ? (
-                    <video 
-                      src={resultMedia} 
-                      controls 
-                      autoPlay 
-                      loop 
-                      className="object-contain w-full h-full" 
-                    />
+                    <video src={resultMedia} controls autoPlay loop className="object-contain w-full h-full" />
                   ) : (
-                    <img 
-                      src={resultMedia} 
-                      alt="Generated model" 
-                      className="object-contain w-full h-full" 
-                    />
+                    <img src={resultMedia} alt="Generated" className="object-contain w-full h-full" />
                   )
                 ) : isLoading ? (
                   <div className="flex flex-col items-center space-y-4 text-neutral-500">

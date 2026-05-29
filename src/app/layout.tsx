@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "aImaGen - Imagine, Generate",
-  description: "Generate photorealistic models for your lingerie and nightwear collection",
+  description: "Generate what you like ;)",
 };
 
 export default function RootLayout({

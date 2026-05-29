@@ -16,12 +16,7 @@ export async function POST(request: Request) {
       ? `${prompt}\n\nNegative prompt: ${negativePrompt}`
       : prompt;
 
-    let messages: any[] = [
-      {
-        role: "user",
-        content: []
-      }
-    ];
+    let messages: any[] = [{ role: "user", content: [] }];
 
     if (mode === 'img2img') {
       if (!imageFile) {
@@ -32,16 +27,8 @@ export async function POST(request: Request) {
       const base64 = buffer.toString('base64');
       const dataUrl = `data:${imageFile.type};base64,${base64}`;
 
-      messages[0].content.push({
-        type: "image_url",
-        image_url: {
-          url: dataUrl
-        }
-      });
-      messages[0].content.push({
-        type: "text",
-        text: fullPrompt
-      });
+      messages[0].content.push({ type: "image_url", image_url: { url: dataUrl } });
+      messages[0].content.push({ type: "text", text: fullPrompt });
     } else {
       messages[0].content = fullPrompt;
     }
@@ -52,7 +39,7 @@ export async function POST(request: Request) {
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "StudioAI",
+        "X-Title": "aImaGen",
       },
       body: JSON.stringify({
         model: "black-forest-labs/flux.2-pro",
@@ -65,38 +52,26 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       console.error("OpenRouter API Error:", data);
-      
       let errorMessage = data.error?.message || "Failed to generate image via OpenRouter.";
-      
-      // Extract specific moderation reasons if provided by the model provider
       if (data.error?.metadata?.raw) {
         try {
           const rawData = JSON.parse(data.error.metadata.raw);
           if (rawData.details && rawData.details["Moderation Reasons"]) {
             errorMessage = "Provider rejected prompt: " + rawData.details["Moderation Reasons"].join(", ");
           }
-        } catch (e) {
-          // ignore parsing error
-        }
+        } catch (e) {}
       }
-
       throw new Error(errorMessage);
     }
 
     const message = data.choices?.[0]?.message;
-    
-    // OpenRouter returns images in the `images` array of the message object
+
     if (message?.images?.[0]?.image_url?.url) {
-       return NextResponse.json({
-         result: {
-           images: [{ url: message.images[0].image_url.url }]
-         }
-       });
+       return NextResponse.json({ result: { images: [{ url: message.images[0].image_url.url }] } });
     } else if (message?.content) {
-      throw new Error("Received text instead of an image from OpenRouter. This usually happens if the model doesn't support the image modality properly or ignored the modality flag.");
+      throw new Error("Received text instead of an image. Model may not support image modality.");
     } else {
-       console.log("Raw OpenRouter response message:", message);
-       throw new Error("Invalid response format from OpenRouter generation API.");
+       throw new Error("Invalid response format from OpenRouter.");
     }
 
   } catch (error: any) {
